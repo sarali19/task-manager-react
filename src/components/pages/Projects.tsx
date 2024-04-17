@@ -3,8 +3,7 @@ import PageTitle from "@/components/PageTitle";
 function Projects() {
   return (
     <div>
-      <PageTitle>Projects</PageTitle>
-      Projects
+      <PageTitle>Projects Page</PageTitle>
     </div>
   );
 }
