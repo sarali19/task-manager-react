@@ -7,7 +7,9 @@ import { useParams } from "react-router-dom";
 async function getTaskById(id: string | undefined) {
   if (!id) return;
   const response = await axios.get<Task>(
-    `https://jsonplaceholder.typicode.com/todos/${Number(id)}`
+    `https://raw.githubusercontent.com/shadcn-ui/ui/main/apps/www/app/(app)/examples/tasks/data/tasks.json/${String(
+      id
+    )}`
   );
   const task = response.data;
   return task;
@@ -26,7 +28,7 @@ function TaskPage() {
   else
     return (
       <div>
-        <PageTitle>{data?.title}</PageTitle>
+        <PageTitle>{data?.id}</PageTitle>
         <div>Task Title: {data?.title}</div>
       </div>
     );

@@ -1,22 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
+import { columns } from "@/components/ui/columns";
 import { Task } from "@/types";
 import PageTitle from "@/components/PageTitle";
 import Loading from "@/components/Loading";
 
 async function getTasks() {
   const response = await axios.get<Task[]>(
-    "https://jsonplaceholder.typicode.com/todos"
+    "https://raw.githubusercontent.com/shadcn-ui/ui/main/apps/www/app/(app)/examples/tasks/data/tasks.json"
   );
   const tasks = response.data;
   return tasks;
@@ -39,26 +31,7 @@ function Tasks() {
     return (
       <div className="bg-background">
         <PageTitle>Tasks</PageTitle>
-        {tasks.map((task) => (
-          <Card key={task.id} className="w-40">
-            <CardHeader>
-              <CardTitle>{task.title}</CardTitle>
-              <CardDescription>
-                Lorem ipsum dolor sit amet consectetur.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div>{task.title}</div>
-              <div>{task.userId}</div>
-              <div>{task.completed ? "✅" : "❌"}</div>
-            </CardContent>
-            <CardFooter>
-              <Button asChild>
-                <Link to={`/tasks/${task.id}`}>View</Link>
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+        <DataTable data={tasks} columns={columns} />
       </div>
     );
 }
