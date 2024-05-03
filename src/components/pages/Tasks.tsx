@@ -24,6 +24,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+// import {
+//   Form,
+//   FormControl,
+//   FormDescription,
+//   FormField,
+//   FormItem,
+//   FormLabel,
+//   FormMessage,
+// } from "@/components/ui/form";
+
+("use client");
+
+// import { z } from "zod";
+
+// const taskFormSchema = z.object({
+//   title: z
+//     .string({
+//       required_error: "Please fill out the title.",
+//     })
+//     .min(2)
+//     .max(50),
+//   status: z.string({
+//     required_error: "Please select a status to display.",
+//   }),
+//   label: z.string({
+//     required_error: "Please select a label to display.",
+//   }),
+//   priority: z.string({
+//     required_error: "Please select a priority to display.",
+//   }),
+// });
+
+// type taskFormValues = z.infer<typeof taskFormSchema>;
 
 async function getTasks() {
   const response = await axios.get<Task[]>(
