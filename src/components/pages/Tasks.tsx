@@ -22,6 +22,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 
 async function getTasks() {
@@ -79,7 +80,7 @@ function Tasks() {
                 </Label>
                 <Select>
                   <SelectTrigger className="w-[180px]">
-                    {/* <SelectValue placeholder="Select a fruit" />  */}
+                    <SelectValue placeholder="Select a status" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="inprogress">In progress</SelectItem>
@@ -96,7 +97,9 @@ function Tasks() {
                   Label
                 </Label>
                 <Select>
-                  <SelectTrigger className="w-[180px]"></SelectTrigger>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select a label" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="inprogress">Documentation</SelectItem>
                     <SelectItem value="backlog">Bug</SelectItem>
@@ -110,7 +113,9 @@ function Tasks() {
                   Priority
                 </Label>
                 <Select>
-                  <SelectTrigger className="w-[180px]"></SelectTrigger>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select a priority" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="inprogress">Low</SelectItem>
                     <SelectItem value="backlog">Medium</SelectItem>
