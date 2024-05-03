@@ -29,7 +29,7 @@ function Sidebar() {
   const { pathname } = useLocation();
 
   return (
-    <div className="bg-background flex flex-col w-72 fixed inset-y-0 z-[80] border-r">
+    <div className="bg-background flex flex-col w-72 fixed inset-y-0 border-r">
       <div className="px-3 py-2 flex-1">
         {/* Brand logo + name */}
         <Link to="/" className="flex items-center my-7 ms-6 gap-2">

@@ -1,11 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { DataTable } from "@/components/ui/data-table";
 import { columns } from "@/components/ui/columns";
 import { Task } from "@/types";
 import PageTitle from "@/components/PageTitle";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import Loading from "@/components/Loading";
 import { CirclePlus } from "lucide-react";
@@ -24,39 +23,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-// import {
-//   Form,
-//   FormControl,
-//   FormDescription,
-//   FormField,
-//   FormItem,
-//   FormLabel,
-//   FormMessage,
-// } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
-("use client");
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { useState } from "react";
 
-// import { z } from "zod";
+const taskFormSchema = z.object({
+  title: z
+    .string({
+      required_error: "Please fill out the title.",
+    })
+    .min(2)
+    .max(50),
+  status: z.string({
+    required_error: "Please select a status to display.",
+  }),
+  label: z.string({
+    required_error: "Please select a label to display.",
+  }),
+  priority: z.string({
+    required_error: "Please select a priority to display.",
+  }),
+});
 
-// const taskFormSchema = z.object({
-//   title: z
-//     .string({
-//       required_error: "Please fill out the title.",
-//     })
-//     .min(2)
-//     .max(50),
-//   status: z.string({
-//     required_error: "Please select a status to display.",
-//   }),
-//   label: z.string({
-//     required_error: "Please select a label to display.",
-//   }),
-//   priority: z.string({
-//     required_error: "Please select a priority to display.",
-//   }),
-// });
-
-// type taskFormValues = z.infer<typeof taskFormSchema>;
+type TaskFormValues = z.infer<typeof taskFormSchema>;
 
 async function getTasks() {
   const response = await axios.get<Task[]>(
@@ -68,14 +67,46 @@ async function getTasks() {
 }
 
 function Tasks() {
+  const [sheetOpen, setSheetOpen] = useState(false);
+
   const {
     data: tasks,
     isLoading,
     error,
+    refetch,
   } = useQuery({
     queryKey: ["tasks"],
     queryFn: getTasks,
   });
+
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: (newTask: TaskFormValues) => {
+      return axios.post("http://localhost:8000/tasks", newTask);
+    },
+    onError: () => {
+      console.log("Error creating a new task");
+    },
+    onSuccess: () => {
+      console.log("Task created successfully");
+    },
+  });
+
+  const form = useForm<TaskFormValues>({
+    resolver: zodResolver(taskFormSchema),
+    defaultValues: {
+      title: "",
+      status: undefined,
+      label: undefined,
+      priority: undefined,
+    },
+  });
+
+  async function submitTask(values: TaskFormValues) {
+    await mutateAsync(values);
+    setSheetOpen(false);
+    form.reset();
+    refetch();
+  }
 
   if (!tasks || isLoading) return <Loading />;
   else if (error)
@@ -84,13 +115,14 @@ function Tasks() {
     return (
       <div className="bg-background">
         <PageTitle>Tasks</PageTitle>
-        <Sheet>
-          <SheetTrigger>
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetTrigger asChild>
             <Button className="mb-7">
               <CirclePlus className="mr-2 h-4 w-4" />
               Create new task
             </Button>
           </SheetTrigger>
+
           <SheetContent className="w-[400px] sm:w-[540px]">
             <SheetHeader>
               <SheetTitle>Create new task</SheetTitle>
@@ -99,63 +131,126 @@ function Tasks() {
                 Click save when you're done.
               </SheetDescription>
             </SheetHeader>
+            {/* Form starts here */}
             <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="title" className="text-right">
-                  Title
-                </Label>
-                <Input id="title" className="col-span-3" />
-              </div>
+              {isPending ? (
+                <Loading />
+              ) : (
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(submitTask)}
+                    className="space-y-4"
+                  >
+                    <FormField
+                      name="title"
+                      control={form.control}
+                      disabled={isPending}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Title</FormLabel>
+                          <FormControl>
+                            <Input placeholder="" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="status" className="text-right">
-                  Status
-                </Label>
-                <Select>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select a status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="inprogress">In progress</SelectItem>
-                    <SelectItem value="backlog">Backlog</SelectItem>
-                    <SelectItem value="todo">Todo</SelectItem>
-                    <SelectItem value="canceled">Canceled</SelectItem>
-                    <SelectItem value="done">Done</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                    <FormField
+                      name="status"
+                      control={form.control}
+                      disabled={isPending}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Status</FormLabel>
+                          <FormControl>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                            >
+                              <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Select a status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="inprogress">
+                                  In progress
+                                </SelectItem>
+                                <SelectItem value="backlog">Backlog</SelectItem>
+                                <SelectItem value="todo">Todo</SelectItem>
+                                <SelectItem value="canceled">
+                                  Canceled
+                                </SelectItem>
+                                <SelectItem value="done">Done</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="label" className="text-right">
-                  Label
-                </Label>
-                <Select>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select a label" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="inprogress">Documentation</SelectItem>
-                    <SelectItem value="backlog">Bug</SelectItem>
-                    <SelectItem value="todo">Feature</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                    <FormField
+                      name="label"
+                      control={form.control}
+                      disabled={isPending}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Label</FormLabel>
+                          <FormControl>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                            >
+                              <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Select a label" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="documentation">
+                                  Documentation
+                                </SelectItem>
+                                <SelectItem value="bug">Bug</SelectItem>
+                                <SelectItem value="feature">Feature</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="priority" className="text-right">
-                  Priority
-                </Label>
-                <Select>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select a priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="inprogress">Low</SelectItem>
-                    <SelectItem value="backlog">Medium</SelectItem>
-                    <SelectItem value="todo">High</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                    <FormField
+                      name="priority"
+                      control={form.control}
+                      disabled={isPending}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Priority</FormLabel>
+                          <FormControl>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                            >
+                              <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Select a priority" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="low">Low</SelectItem>
+                                <SelectItem value="medium">Medium</SelectItem>
+                                <SelectItem value="high">High</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="submit" disabled={isPending}>
+                      Create task
+                    </Button>
+                  </form>
+                </Form>
+              )}
             </div>
           </SheetContent>
         </Sheet>
