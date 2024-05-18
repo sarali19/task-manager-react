@@ -5,3 +5,9 @@ export type Task = {
   label: string;
   priority: string;
 };
+
+export type Project ={
+  idProject: string;
+  titleProject: string;
+  descriptionProject: string;
+}
