@@ -58,10 +58,7 @@ const taskFormSchema = z.object({
 type TaskFormValues = z.infer<typeof taskFormSchema>;
 
 async function getTasks() {
-  const response = await axios.get<Task[]>(
-    // "https://raw.githubusercontent.com/shadcn-ui/ui/main/apps/www/app/(app)/examples/tasks/data/tasks.json"
-    "http://localhost:8000/tasks"
-  );
+  const response = await axios.get<Task[]>("http://localhost:8000/tasks");
   const tasks = response.data;
   return tasks;
 }

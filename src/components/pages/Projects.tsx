@@ -13,7 +13,7 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
+  // SheetTrigger,
 } from "@/components/ui/sheet";
 import {
   Form,
@@ -134,14 +134,11 @@ function Projects() {
     return (
       <div className="bg-background">
         <PageTitle>Projects Page</PageTitle>
+        <Button onClick={() => setSheetOpen(true)} className="mb-7">
+          <CirclePlus className="mr-2 h-4 w-4" />
+          Create new project
+        </Button>
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-          <SheetTrigger asChild>
-            <Button className="mb-7">
-              <CirclePlus className="mr-2 h-4 w-4" />
-              Create new project
-            </Button>
-          </SheetTrigger>
-
           <SheetContent className="w-[400px] sm:w-[540px]">
             <SheetHeader>
               <SheetTitle>Create new project</SheetTitle>
@@ -247,7 +244,14 @@ function Projects() {
                   </Card>
                 </ContextMenuTrigger>
                 <ContextMenuContent>
-                  <ContextMenuItem>Edit project</ContextMenuItem>
+                  <ContextMenuItem
+                    onClick={() => {
+                      form.reset({ teamLeadId: "1", ...project });
+                      setSheetOpen(true);
+                    }}
+                  >
+                    Edit project
+                  </ContextMenuItem>
                   <DialogTrigger asChild>
                     <ContextMenuItem className="text-destructive">
                       Delete project

@@ -5,33 +5,9 @@ import { labels, priorities, statuses } from "@/components/Taskdata";
 import { Task } from "@/types";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Link } from "react-router-dom";
 
 export const columns: ColumnDef<Task>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-        className="translate-y-[2px]"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-        className="translate-y-[2px]"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
   {
     accessorKey: "id",
     header: ({ column }) => (
@@ -52,9 +28,11 @@ export const columns: ColumnDef<Task>[] = [
       return (
         <div className="flex space-x-2">
           {label && <Badge variant="outline">{label.label}</Badge>}
-          <span className="max-w-[500px] truncate font-medium">
-            {row.getValue("title")}
-          </span>
+          <Link to={`/tasks/${row.original.id}`}>
+            <span className="max-w-[500px] truncate font-medium hover:underline">
+              {row.getValue("title")}
+            </span>
+          </Link>
         </div>
       );
     },
