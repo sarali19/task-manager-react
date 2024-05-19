@@ -1,11 +1,5 @@
 import PageTitle from "@/components/PageTitle";
-import {
-  Card,
-  CardContent,
-  // CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Loading from "@/components/Loading";
 import {
   ContextMenu,
@@ -29,9 +23,18 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import axios from "axios";
 import { Project } from "@/types";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -41,28 +44,38 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const projectFormSchema = z.object({
-  title: z
+  name: z
     .string({
       required_error: "Please fill out the title.",
     })
     .min(2)
     .max(50),
   description: z.string().optional(),
+  teamLeadId: z.string(),
 });
 
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
 async function getProjects() {
-  const response = await axios.get<Project[]>("http://localhost:8000/projects");
-  const projects = response.data;
-  return projects;
+  const response = await axios.get<Project[]>(
+    "http://localhost:8080/api/projects"
+  );
+  return response.data;
 }
 
 function Projects() {
   const navigate = useNavigate();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const queryClient = useQueryClient();
   const {
     data: projects,
     isLoading,
@@ -73,10 +86,13 @@ function Projects() {
     queryFn: getProjects,
   });
 
-  const { isPending, mutateAsync } = useMutation({
+  const { isPending, mutateAsync: createProject } = useMutation({
     mutationFn: (newProject: ProjectFormValues) => {
-      console.log(newProject);
-      return axios.post("http://localhost:8000/projects", newProject);
+      const { teamLeadId, ...project } = newProject;
+      return axios.post(
+        `http://localhost:8080/api/projects/create/${teamLeadId}`,
+        project
+      );
     },
     onError: () => {
       console.log("Error creating a new project");
@@ -86,16 +102,26 @@ function Projects() {
     },
   });
 
-  const form = useForm<ProjectFormValues>({
-    resolver: zodResolver(projectFormSchema),
-    defaultValues: {
-      title: "",
-      description: "",
+  const { mutateAsync: deleteProjectMutation } = useMutation({
+    mutationFn: (projectId: number) => {
+      return axios.delete(`http://localhost:8080/api/projects/${projectId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
   });
 
-  async function submitProject(values: ProjectFormValues) {
-    await mutateAsync(values);
+  const form = useForm<ProjectFormValues>({
+    resolver: zodResolver(projectFormSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      teamLeadId: "",
+    },
+  });
+
+  async function submitProject(project: ProjectFormValues) {
+    await createProject(project);
     setSheetOpen(false);
     form.reset();
     refetch();
@@ -135,7 +161,7 @@ function Projects() {
                     className="space-y-4"
                   >
                     <FormField
-                      name="title"
+                      name="name"
                       control={form.control}
                       disabled={isPending}
                       render={({ field }) => (
@@ -163,6 +189,31 @@ function Projects() {
                       )}
                     />
 
+                    <FormField
+                      name="teamLeadId"
+                      control={form.control}
+                      disabled={isPending}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Team Leader</FormLabel>
+                          <FormControl>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                            >
+                              <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Select a team leader" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">Sara Lissaoui</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <Button type="submit" disabled={isPending}>
                       Create project
                     </Button>
@@ -173,34 +224,56 @@ function Projects() {
           </SheetContent>
         </Sheet>
 
-        <div>
-          <ContextMenu>
-            <ContextMenuTrigger className="grid gap-4 grid-cols-4">
-              {projects.map((project) => (
-                <Card
-                  key={project.id}
-                  onClick={() => navigate(`/projects/${project.id}`)}
-                  className="hover:bg-slate-100 hover:cursor-pointer"
-                >
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      Project #{project.id}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{project.title}</div>
-                    <p className="text-xs text-muted-foreground">
-                      {project.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </ContextMenuTrigger>
-            <ContextMenuContent>
-              <ContextMenuItem>Edit project</ContextMenuItem>
-              <ContextMenuItem>Delete project</ContextMenuItem>
-            </ContextMenuContent>
-          </ContextMenu>
+        <div className="grid gap-4 grid-cols-4">
+          {projects.map((project) => (
+            <Dialog key={project.id}>
+              <ContextMenu>
+                <ContextMenuTrigger>
+                  <Card
+                    onClick={() => navigate(`/projects/${project.id}`)}
+                    className="hover:bg-slate-100 hover:cursor-pointer"
+                  >
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        Project #{project.id}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{project.name}</div>
+                      <p className="text-xs text-muted-foreground">
+                        {project.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                  <ContextMenuItem>Edit project</ContextMenuItem>
+                  <DialogTrigger asChild>
+                    <ContextMenuItem className="text-destructive">
+                      Delete project
+                    </ContextMenuItem>
+                  </DialogTrigger>
+                </ContextMenuContent>
+              </ContextMenu>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Are you absolutely sure?</DialogTitle>
+                  <DialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    this project.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant="destructive"
+                    onClick={() => deleteProjectMutation(project.id)}
+                  >
+                    Delete project
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          ))}
         </div>
       </div>
     );

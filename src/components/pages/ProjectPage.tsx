@@ -34,7 +34,7 @@ function ProjectPage() {
     return (
       <div>
         <PageTitle>{project?.id}</PageTitle>
-        <div>Task Title: {project?.title}</div>
+        <div>Task Title: {project?.name}</div>
       </div>
     );
 }
