@@ -11,6 +11,7 @@ import "./styles.css";
 import Dashboard from "./components/pages/Dashboard.tsx";
 import Layout from "./components/Layout.tsx";
 import Projects from "./components/pages/Projects.tsx";
+import ProjectPage from "@/components/pages/ProjectPage.tsx";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,10 @@ const router = createBrowserRouter([
       {
         path: "projects",
         element: <Projects />,
+      },
+      {
+        path: "projects/:projectId",
+        element: <ProjectPage />,
       },
       {
         path: "tasks",
