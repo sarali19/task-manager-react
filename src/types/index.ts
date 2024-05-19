@@ -7,7 +7,8 @@ export type Task = {
 };
 
 export type Project ={
-  idProject: string;
-  titleProject: string;
-  descriptionProject: string;
+  id:number , 
+  name:string , 
+  description : string ,
+  createdAt:string
 }
