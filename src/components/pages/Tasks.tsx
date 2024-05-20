@@ -36,6 +36,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
 
 const taskFormSchema = z.object({
   title: z
@@ -44,6 +45,7 @@ const taskFormSchema = z.object({
     })
     .min(2)
     .max(50),
+  description: z.string(),
   status: z.string({
     required_error: "Please select a status to display.",
   }),
@@ -58,7 +60,7 @@ const taskFormSchema = z.object({
 type TaskFormValues = z.infer<typeof taskFormSchema>;
 
 async function getTasks() {
-  const response = await axios.get<Task[]>("http://localhost:8000/tasks");
+  const response = await axios.get<Task[]>("http://localhost:8080/api/tasks");
   const tasks = response.data;
   return tasks;
 }
@@ -78,7 +80,7 @@ function Tasks() {
 
   const { isPending, mutateAsync } = useMutation({
     mutationFn: (newTask: TaskFormValues) => {
-      return axios.post("http://localhost:8000/tasks", newTask);
+      return axios.post("http://localhost:8080/api/tasks", newTask);
     },
     onError: () => {
       console.log("Error creating a new task");
@@ -92,6 +94,7 @@ function Tasks() {
     resolver: zodResolver(taskFormSchema),
     defaultValues: {
       title: "",
+      description: "",
       status: undefined,
       label: undefined,
       priority: undefined,
@@ -152,6 +155,20 @@ function Tasks() {
                         </FormItem>
                       )}
                     />
+                    <FormField
+                      name="description"
+                      control={form.control}
+                      disabled={isPending}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <FormField
                       name="status"
@@ -169,15 +186,15 @@ function Tasks() {
                                 <SelectValue placeholder="Select a status" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="inprogress">
+                                <SelectItem value="In progress">
                                   In progress
                                 </SelectItem>
-                                <SelectItem value="backlog">Backlog</SelectItem>
-                                <SelectItem value="todo">Todo</SelectItem>
-                                <SelectItem value="canceled">
+                                <SelectItem value="Backlog">Backlog</SelectItem>
+                                <SelectItem value="To do">Todo</SelectItem>
+                                <SelectItem value="Canceled">
                                   Canceled
                                 </SelectItem>
-                                <SelectItem value="done">Done</SelectItem>
+                                <SelectItem value="Done">Done</SelectItem>
                               </SelectContent>
                             </Select>
                           </FormControl>
@@ -202,11 +219,11 @@ function Tasks() {
                                 <SelectValue placeholder="Select a label" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="documentation">
+                                <SelectItem value="Documentation">
                                   Documentation
                                 </SelectItem>
-                                <SelectItem value="bug">Bug</SelectItem>
-                                <SelectItem value="feature">Feature</SelectItem>
+                                <SelectItem value="Bug">Bug</SelectItem>
+                                <SelectItem value="Feature">Feature</SelectItem>
                               </SelectContent>
                             </Select>
                           </FormControl>
@@ -231,9 +248,9 @@ function Tasks() {
                                 <SelectValue placeholder="Select a priority" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="low">Low</SelectItem>
-                                <SelectItem value="medium">Medium</SelectItem>
-                                <SelectItem value="high">High</SelectItem>
+                                <SelectItem value="Low">Low</SelectItem>
+                                <SelectItem value="Medium">Medium</SelectItem>
+                                <SelectItem value="High">High</SelectItem>
                               </SelectContent>
                             </Select>
                           </FormControl>

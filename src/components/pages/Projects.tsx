@@ -33,7 +33,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import axios from "axios";
-import { Project } from "@/types";
+import { Project, TeamLeader } from "@/types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -51,8 +51,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 const projectFormSchema = z.object({
+  id: z.number().optional(),
   name: z
     .string({
       required_error: "Please fill out the title.",
@@ -60,7 +62,7 @@ const projectFormSchema = z.object({
     .min(2)
     .max(50),
   description: z.string().optional(),
-  teamLeadId: z.string(),
+  teamLeaderId: z.string(),
 });
 
 type ProjectFormValues = z.infer<typeof projectFormSchema>;
@@ -71,10 +73,17 @@ async function getProjects() {
   );
   return response.data;
 }
+async function getTeamLeaders() {
+  const response = await axios.get<TeamLeader[]>(
+    "http://localhost:8080/api/teamleaders"
+  );
+  return response.data;
+}
 
 function Projects() {
   const navigate = useNavigate();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const queryClient = useQueryClient();
   const {
     data: projects,
@@ -85,22 +94,47 @@ function Projects() {
     queryKey: ["projects"],
     queryFn: getProjects,
   });
-
-  const { isPending, mutateAsync: createProject } = useMutation({
-    mutationFn: (newProject: ProjectFormValues) => {
-      const { teamLeadId, ...project } = newProject;
-      return axios.post(
-        `http://localhost:8080/api/projects/create/${teamLeadId}`,
-        project
-      );
-    },
-    onError: () => {
-      console.log("Error creating a new project");
-    },
-    onSuccess: () => {
-      console.log("Project created successfully");
-    },
+  const { data: teamLeaders, isLoading: isLoadingTeamLeads } = useQuery({
+    queryKey: ["teamLeaders"],
+    queryFn: getTeamLeaders,
   });
+
+  const { isPending: isPendingCreate, mutateAsync: createProject } =
+    useMutation({
+      mutationFn: (newProject: ProjectFormValues) => {
+        const { teamLeaderId, ...project } = newProject;
+        return axios.post(
+          `http://localhost:8080/api/projects/create/${teamLeaderId}`,
+          project
+        );
+      },
+      onError: () => {
+        console.log("Error creating a new project");
+      },
+      onSuccess: () => {
+        toast("Project created successfully!", {
+          description: new Date().toLocaleDateString(),
+        });
+      },
+    });
+
+  const { isPending: isPendingUpdate, mutateAsync: updateProject } =
+    useMutation({
+      mutationFn: (project: ProjectFormValues) => {
+        return axios.put(`http://localhost:8080/api/projects/${project.id}`, {
+          ...project,
+          teamLeaderId: Number(project.teamLeaderId),
+        });
+      },
+      onError: () => {
+        console.log("Error updating a new project");
+      },
+      onSuccess: () => {
+        toast("Project updated successfully!", {
+          description: new Date().toLocaleDateString(),
+        });
+      },
+    });
 
   const { mutateAsync: deleteProjectMutation } = useMutation({
     mutationFn: (projectId: number) => {
@@ -108,6 +142,9 @@ function Projects() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
+      toast("Project deleted successfully!", {
+        description: new Date().toLocaleDateString(),
+      });
     },
   });
 
@@ -116,12 +153,13 @@ function Projects() {
     defaultValues: {
       name: "",
       description: "",
-      teamLeadId: "",
+      teamLeaderId: "",
     },
   });
 
   async function submitProject(project: ProjectFormValues) {
-    await createProject(project);
+    if (isEditMode) await updateProject(project);
+    else await createProject(project);
     setSheetOpen(false);
     form.reset();
     refetch();
@@ -138,10 +176,18 @@ function Projects() {
           <CirclePlus className="mr-2 h-4 w-4" />
           Create new project
         </Button>
-        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        <Sheet
+          open={sheetOpen}
+          onOpenChange={(open) => {
+            setSheetOpen(open);
+            if (!open) setIsEditMode(false);
+          }}
+        >
           <SheetContent className="w-[400px] sm:w-[540px]">
             <SheetHeader>
-              <SheetTitle>Create new project</SheetTitle>
+              <SheetTitle>
+                {isEditMode ? "Update project" : "Create Project"}
+              </SheetTitle>
               <SheetDescription>
                 Fill in the necessary information in order to add a new project.
                 Click save when you're done.
@@ -149,7 +195,7 @@ function Projects() {
             </SheetHeader>
             {/* Form starts here */}
             <div className="grid gap-4 py-4">
-              {isPending ? (
+              {isPendingCreate ? (
                 <Loading />
               ) : (
                 <Form {...form}>
@@ -160,7 +206,7 @@ function Projects() {
                     <FormField
                       name="name"
                       control={form.control}
-                      disabled={isPending}
+                      disabled={isPendingCreate}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Title</FormLabel>
@@ -174,7 +220,7 @@ function Projects() {
                     <FormField
                       name="description"
                       control={form.control}
-                      disabled={isPending}
+                      disabled={isPendingCreate}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Description</FormLabel>
@@ -187,9 +233,9 @@ function Projects() {
                     />
 
                     <FormField
-                      name="teamLeadId"
+                      name="teamLeaderId"
                       control={form.control}
-                      disabled={isPending}
+                      disabled={isPendingCreate}
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Team Leader</FormLabel>
@@ -197,12 +243,17 @@ function Projects() {
                             <Select
                               onValueChange={field.onChange}
                               value={field.value}
+                              disabled={isLoadingTeamLeads}
                             >
                               <SelectTrigger className="w-[180px]">
                                 <SelectValue placeholder="Select a team leader" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="1">Sara Lissaoui</SelectItem>
+                                {teamLeaders?.map((tl) => (
+                                  <SelectItem key={tl.id} value={`${tl.id}`}>
+                                    {tl.firstName + " " + tl.lastName}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           </FormControl>
@@ -211,8 +262,11 @@ function Projects() {
                       )}
                     />
 
-                    <Button type="submit" disabled={isPending}>
-                      Create project
+                    <Button
+                      type="submit"
+                      disabled={isPendingCreate || isPendingUpdate}
+                    >
+                      {isEditMode ? "Update project" : "Create Project"}
                     </Button>
                   </form>
                 </Form>
@@ -246,8 +300,12 @@ function Projects() {
                 <ContextMenuContent>
                   <ContextMenuItem
                     onClick={() => {
-                      form.reset({ teamLeadId: "1", ...project });
+                      form.reset({
+                        ...project,
+                        teamLeaderId: `${project.teamLeader.id}`,
+                      });
                       setSheetOpen(true);
+                      setIsEditMode(true);
                     }}
                   >
                     Edit project

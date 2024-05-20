@@ -1,7 +1,5 @@
-"use client";
-
 import { ColumnDef } from "@tanstack/react-table";
-import { labels, priorities, statuses } from "@/components/Taskdata";
+import { priorityIcon, statusIcon } from "@/components/Taskdata";
 import { Task } from "@/types";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
 import { Badge } from "@/components/ui/badge";
@@ -23,11 +21,9 @@ export const columns: ColumnDef<Task>[] = [
       <DataTableColumnHeader column={column} title="Title" />
     ),
     cell: ({ row }) => {
-      const label = labels.find((label) => label.value === row.original.label);
-
       return (
         <div className="flex space-x-2">
-          {label && <Badge variant="outline">{label.label}</Badge>}
+          <Badge variant="outline">{row.original.label}</Badge>
           <Link to={`/tasks/${row.original.id}`}>
             <span className="max-w-[500px] truncate font-medium hover:underline">
               {row.getValue("title")}
@@ -38,25 +34,48 @@ export const columns: ColumnDef<Task>[] = [
     },
   },
   {
+    accessorKey: "project.name",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Project" />
+    ),
+    cell: ({ row }) => {
+      return (
+        <div className="flex space-x-2">
+          <span className="max-w-[500px] truncate font-medium hover:underline">
+            {row.original.project.name}
+          </span>
+        </div>
+      );
+    },
+  },
+  {
+    id: "member",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Member" />
+    ),
+    cell: ({ row }) => {
+      return (
+        <div className="flex space-x-2">
+          <span className="max-w-[500px] truncate font-medium hover:underline">
+            {row.original.member.firstName + " " + row.original.member.lastName}
+          </span>
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "status",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
     cell: ({ row }) => {
-      const status = statuses.find(
-        (status) => status.value === row.getValue("status")
-      );
-
-      if (!status) {
-        return null;
-      }
-
+      const status = row.original.status;
+      const Icon = statusIcon?.[status];
       return (
         <div className="flex w-[100px] items-center">
-          {status.icon && (
-            <status.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-          )}
-          <span>{status.label}</span>
+          <Icon className="mr-2 h-4 w-4 text-muted-foreground" />
+
+          <span>{status}</span>
         </div>
       );
     },
@@ -70,20 +89,13 @@ export const columns: ColumnDef<Task>[] = [
       <DataTableColumnHeader column={column} title="Priority" />
     ),
     cell: ({ row }) => {
-      const priority = priorities.find(
-        (priority) => priority.value === row.getValue("priority")
-      );
-
-      if (!priority) {
-        return null;
-      }
-
+      const priority = row.original.priority;
+      const Icon = priorityIcon?.[priority];
       return (
-        <div className="flex items-center">
-          {priority.icon && (
-            <priority.icon className="mr-2 h-4 w-4 text-muted-foreground" />
-          )}
-          <span>{priority.label}</span>
+        <div className="flex w-[100px] items-center">
+          <Icon className="mr-2 h-4 w-4 text-muted-foreground" />
+
+          <span>{priority}</span>
         </div>
       );
     },

@@ -12,6 +12,7 @@ import Dashboard from "./components/pages/Dashboard.tsx";
 import Layout from "./components/Layout.tsx";
 import Projects from "./components/pages/Projects.tsx";
 import ProjectPage from "@/components/pages/ProjectPage.tsx";
+import { Toaster } from "@/components/ui/sonner";
 
 const queryClient = new QueryClient();
 
@@ -54,5 +55,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       {/* <ReactQueryDevtools /> */}
       <RouterProvider router={router} />
     </QueryClientProvider>
+    <Toaster />
   </React.StrictMode>
 );
