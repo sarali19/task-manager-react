@@ -12,10 +12,6 @@ async function getProjectById(id: string | undefined) {
   return response.data;
 }
 
-// dislay project info
-// create tasks?
-// project progress
-
 function ProjectPage() {
   const { projectId } = useParams();
   const {

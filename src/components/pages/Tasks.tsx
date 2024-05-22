@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { DataTable } from "@/components/ui/data-table";
 import { columns } from "@/components/ui/columns";
-import { Task } from "@/types";
+import { Member, Project, Task } from "@/types";
 import PageTitle from "@/components/PageTitle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,12 +31,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 const taskFormSchema = z.object({
   title: z
@@ -55,19 +55,31 @@ const taskFormSchema = z.object({
   priority: z.string({
     required_error: "Please select a priority to display.",
   }),
+  memberId: z.string(),
+  projectId: z.string(),
 });
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
 
 async function getTasks() {
   const response = await axios.get<Task[]>("http://localhost:8080/api/tasks");
-  const tasks = response.data;
-  return tasks;
+  return response.data;
+}
+async function getMembers() {
+  const response = await axios.get<Member[]>(
+    "http://localhost:8080/api/members"
+  );
+  return response.data;
+}
+async function getProjects() {
+  const response = await axios.get<Project[]>(
+    "http://localhost:8080/api/projects"
+  );
+  return response.data;
 }
 
 function Tasks() {
   const [sheetOpen, setSheetOpen] = useState(false);
-
   const {
     data: tasks,
     isLoading,
@@ -77,16 +89,30 @@ function Tasks() {
     queryKey: ["tasks"],
     queryFn: getTasks,
   });
+  const { data: members, isLoading: isLoadingMembers } = useQuery({
+    queryKey: ["members"],
+    queryFn: getMembers,
+  });
+  const { data: projects, isLoading: isLoadingProjects } = useQuery({
+    queryKey: ["projects"],
+    queryFn: getProjects,
+  });
 
-  const { isPending, mutateAsync } = useMutation({
+  const { isPending, mutateAsync: createTask } = useMutation({
     mutationFn: (newTask: TaskFormValues) => {
-      return axios.post("http://localhost:8080/api/tasks", newTask);
+      const { projectId, memberId, ...task } = newTask;
+      return axios.post(
+        `http://localhost:8080/api/tasks/project/${projectId}/member/${memberId}`,
+        task
+      );
     },
     onError: () => {
       console.log("Error creating a new task");
     },
     onSuccess: () => {
-      console.log("Task created successfully");
+      toast("Task created successfully!", {
+        description: new Date().toLocaleDateString(),
+      });
     },
   });
 
@@ -95,17 +121,23 @@ function Tasks() {
     defaultValues: {
       title: "",
       description: "",
-      status: undefined,
-      label: undefined,
-      priority: undefined,
+      status: "",
+      label: "",
+      priority: "",
+      memberId: "",
+      projectId: "",
     },
   });
 
   async function submitTask(values: TaskFormValues) {
-    await mutateAsync(values);
-    setSheetOpen(false);
-    form.reset();
-    refetch();
+    try {
+      await createTask(values);
+      setSheetOpen(false);
+      form.reset();
+      refetch();
+    } catch (error) {
+      console.error("Promise rejected with error: " + error);
+    }
   }
 
   if (!tasks || isLoading) return <Loading />;
@@ -251,6 +283,65 @@ function Tasks() {
                                 <SelectItem value="Low">Low</SelectItem>
                                 <SelectItem value="Medium">Medium</SelectItem>
                                 <SelectItem value="High">High</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      name="projectId"
+                      control={form.control}
+                      disabled={isPending}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Project</FormLabel>
+                          <FormControl>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                              disabled={isLoadingProjects}
+                            >
+                              <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Select a project" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {projects?.map((pr) => (
+                                  <SelectItem key={pr.id} value={`${pr.id}`}>
+                                    {pr.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      name="memberId"
+                      control={form.control}
+                      disabled={isPending}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Assignee</FormLabel>
+                          <FormControl>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                              disabled={isLoadingMembers}
+                            >
+                              <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Select the assignee" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {members?.map((m) => (
+                                  <SelectItem key={m.id} value={`${m.id}`}>
+                                    {m.firstName + " " + m.lastName}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           </FormControl>
