@@ -1,19 +1,28 @@
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import React from 'react';
+import { BrowserRouter as Router, Route, Navigate, Routes } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import Login from './components/pages/Login';
+import Unauthorized from './components/pages/Unauthorized';
+import AdminLayout from './components/Administrator/AdminLayout';
+import TeamLeaderLayout from './components/TeamLeader/TeamLeaderLayout'
+import Layout from './components/Layout';
+import PrivateRoute from './components/PrivateRoute';
 
-function App() {
+const App: React.FC = () => {
   return (
-    <div className="bg-red-400">
-      Hello World!
-      <Button asChild>
-        <Link to="tasks">Click Me</Link>
-      </Button>
-      or
-      <Button asChild>
-        <Link to="dashboard">Go To Dashboard!</Link>
-      </Button>
-    </div>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path='/login' element={<Login/>} />
+          <Route path='/administrator' element={<PrivateRoute element={<AdminLayout/>} role='ADMINISTRATOR' />} />
+          <Route path='/team_leader' element={<PrivateRoute element={<TeamLeaderLayout/>} role='TEAM_LEADER' />} />
+          <Route path='/member' element={<PrivateRoute element={<Layout/>} role='MEMBER' />} />
+          <Route path='/unauthorized' element={<Unauthorized />} />
+          <Route path='*' element={<Navigate to='/login' />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
-}
+};
 
 export default App;

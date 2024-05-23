@@ -9,8 +9,46 @@ import {
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { useNavigate } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
+import { AuthContext } from "@/context/AuthContext";
+import { jwtDecode } from 'jwt-decode';
+
+interface DecodedToken {
+  email: string;
+  firstname: string;
+  lastname: string;
+}
 
 function UserNav() {
+  const { logout } = useContext(AuthContext)!;
+  const navigate = useNavigate();
+  const [email, setEmail] = useState<string | null>(null);
+  const [firstname, setFirstname] = useState<string | null>(null);
+  const [lastname, setLastname] = useState<string | null>(null);
+  
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    logout();
+    navigate('/login');
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decodedToken = jwtDecode<DecodedToken>(token);
+        setEmail(decodedToken.email);
+        setFirstname(decodedToken.firstname);
+        setLastname(decodedToken.lastname);
+      } catch (error) {
+        console.error('Failed to decode token:', error);
+        // Optionally, handle token decode error (e.g., clear token, log out user)
+        handleLogout();
+      }
+    }
+  }, []);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -27,9 +65,9 @@ function UserNav() {
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">Sara Lissaoui</p>
+            <p className="text-sm font-medium leading-none">{firstname} {lastname}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              saralissaoui@gmail.com
+              {email}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -38,7 +76,7 @@ function UserNav() {
           <DropdownMenuItem>Profile</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>Log out</DropdownMenuItem>
+        <button onClick={handleLogout}><DropdownMenuItem>Log out</DropdownMenuItem></button>
       </DropdownMenuContent>
     </DropdownMenu>
   );
