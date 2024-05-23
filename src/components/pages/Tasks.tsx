@@ -5,6 +5,13 @@ import { columns } from "@/components/ui/columns";
 import { Member, Project, Task } from "@/types";
 import PageTitle from "@/components/PageTitle";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import Loading from "@/components/Loading";
 import { CirclePlus } from "lucide-react";
@@ -31,12 +38,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { format } from "date-fns";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { CalendarIcon } from "@radix-ui/react-icons";
 
 const taskFormSchema = z.object({
   title: z
@@ -57,6 +66,9 @@ const taskFormSchema = z.object({
   }),
   memberId: z.string(),
   projectId: z.string(),
+  dueDate: z.date({
+    required_error: "A due date is required.",
+  }),
 });
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
@@ -126,6 +138,7 @@ function Tasks() {
       priority: "",
       memberId: "",
       projectId: "",
+      dueDate: undefined,
     },
   });
 
@@ -155,7 +168,7 @@ function Tasks() {
             </Button>
           </SheetTrigger>
 
-          <SheetContent className="w-[400px] sm:w-[540px]">
+          <SheetContent className="w-[400px] sm:w-[540px] overflow-y-scroll max-h-screen">
             <SheetHeader>
               <SheetTitle>Create new task</SheetTitle>
               <SheetDescription>
@@ -349,6 +362,51 @@ function Tasks() {
                         </FormItem>
                       )}
                     />
+                    <FormField
+                      name="dueDate"
+                      control={form.control}
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Due Date</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                    "w-[240px] pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "PPP")
+                                  ) : (
+                                    <span>Pick a date</span>
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent
+                              className="w-auto p-0"
+                              align="start"
+                            >
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                // disabled={(date) =>
+                                //   date > new Date() ||
+                                //   date < new Date("1900-01-01")
+                                // }
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <Button type="submit" disabled={isPending}>
                       Create task
@@ -359,7 +417,6 @@ function Tasks() {
             </div>
           </SheetContent>
         </Sheet>
-
         <DataTable data={tasks} columns={columns} />
       </div>
     );
