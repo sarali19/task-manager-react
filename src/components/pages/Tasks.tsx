@@ -218,11 +218,11 @@ function Tasks() {
                                 <SelectValue placeholder="Select a status" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="In progress">
+                                <SelectItem value="InProgress">
                                   In progress
                                 </SelectItem>
                                 <SelectItem value="Backlog">Backlog</SelectItem>
-                                <SelectItem value="To do">Todo</SelectItem>
+                                <SelectItem value="Todo">To do</SelectItem>
                                 <SelectItem value="Canceled">
                                   Canceled
                                 </SelectItem>

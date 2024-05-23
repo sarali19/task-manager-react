@@ -9,12 +9,12 @@ import {
   StopwatchIcon,
 } from "@radix-ui/react-icons";
 
-export const statusIcon = {
-  Backlog: QuestionMarkCircledIcon,
-  "To do": CircleIcon,
-  "In progress": StopwatchIcon,
-  Done: CheckCircledIcon,
-  Canceled: CrossCircledIcon,
+export const statuses = {
+  Backlog: { displayName: "Backlog", icon: QuestionMarkCircledIcon },
+  Todo: { displayName: "To do", icon: CircleIcon },
+  InProgress: { displayName: "In progress", icon: StopwatchIcon },
+  Done: { displayName: "Done", icon: CheckCircledIcon },
+  Canceled: { displayName: "Canceled", icon: CrossCircledIcon },
 };
 
 export const priorityIcon = {

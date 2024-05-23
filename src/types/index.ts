@@ -33,6 +33,6 @@ export type Member={
   lastName: string
 }
 
-export type Status= "In progress" | "Backlog" | "To do" | "Canceled" | "Done"
+export type Status= "InProgress" | "Backlog" | "Todo" | "Canceled" | "Done"
 export type Priority= "High" | "Medium" | "Low"
 export type Label= "Documentation" | "Bug" | "Feature"

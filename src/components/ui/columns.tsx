@@ -1,9 +1,10 @@
 import { ColumnDef } from "@tanstack/react-table";
-import { priorityIcon, statusIcon } from "@/components/Taskdata";
+import { priorityIcon, statuses } from "@/components/Taskdata";
 import { Task } from "@/types";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
+import clsx from "clsx";
 
 export const columns: ColumnDef<Task>[] = [
   {
@@ -23,7 +24,17 @@ export const columns: ColumnDef<Task>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex space-x-2">
-          <Badge variant="outline">{row.original.label}</Badge>
+          <Badge
+            className={clsx({
+              "bg-red-400 hover:bg-red-600": row.original.label === "Bug",
+              "bg-sky-400 hover:bg-sky-600":
+                row.original.label === "Documentation",
+              "bg-emerald-400 hover:bg-green-600":
+                row.original.label === "Feature",
+            })}
+          >
+            {row.original.label}
+          </Badge>
           <Link to={`/tasks/${row.original.id}`}>
             <span className="max-w-[500px] truncate font-medium hover:underline">
               {row.getValue("title")}
@@ -69,8 +80,8 @@ export const columns: ColumnDef<Task>[] = [
       <DataTableColumnHeader column={column} title="Status" />
     ),
     cell: ({ row }) => {
-      const status = row.original.status;
-      const Icon = statusIcon?.[status];
+      const status = statuses?.[row.original.status].displayName;
+      const Icon = statuses?.[row.original.status].icon;
       return (
         <div className="flex w-[100px] items-center">
           <Icon className="mr-2 h-4 w-4 text-muted-foreground" />
