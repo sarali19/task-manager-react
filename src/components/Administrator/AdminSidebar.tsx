@@ -44,7 +44,7 @@ function AdminSidebar() {
               alt="logo"
             />
           </div>
-          <div className="text-2xl font-bold text-primary">Taskifire</div>
+          <div className="text-2xl font-bold text-primary">Taskify</div>
         </Link>
         {/* Links  */}
         <div className="space-y-4 px-3 py-4">

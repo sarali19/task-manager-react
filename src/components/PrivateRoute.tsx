@@ -21,7 +21,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({
   }
 
   const { isAuthenticated, role: userRole } = authContext;
-
+  
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }

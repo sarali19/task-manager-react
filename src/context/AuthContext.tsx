@@ -11,15 +11,15 @@ interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [role, setRole] = useState<string | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => { return !!localStorage.getItem('token')});
+  const [role, setRole] = useState<string | null>(() => { return localStorage.getItem('role')});
+  const [token, setToken] = useState<string | null>(() => { return localStorage.getItem('token')});
 
 
   useEffect(() => {
     const userToken = localStorage.getItem('token');
     const userRole = localStorage.getItem('role');
-    if (token && userRole) {
+    if (userToken && userRole) {
       setIsAuthenticated(true);
       setRole(userRole);
       setToken(userToken);
@@ -31,6 +31,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.setItem('role', role);
     setIsAuthenticated(true);
     setRole(role);
+    setToken(token);
   };
 
   const logout = () => {
@@ -41,7 +42,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, role, token, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, role, login, logout, token }}>
       {children}
     </AuthContext.Provider>
   );

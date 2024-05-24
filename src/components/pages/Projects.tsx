@@ -36,7 +36,7 @@ import axios from "axios";
 import { Project, TeamLeader } from "@/types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CirclePlus } from "lucide-react";
 import { z } from "zod";
@@ -52,6 +52,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+
+const token = localStorage.getItem('token');
+const role = localStorage.getItem('role');
 
 const projectFormSchema = z.object({
   id: z.number().optional(),
@@ -69,13 +72,25 @@ type ProjectFormValues = z.infer<typeof projectFormSchema>;
 
 async function getProjects() {
   const response = await axios.get<Project[]>(
-    "http://localhost:8080/api/projects"
+    "http://localhost:8080/teamleader/projects",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }
   );
   return response.data;
 }
 async function getTeamLeaders() {
   const response = await axios.get<TeamLeader[]>(
-    "http://localhost:8080/api/teamleaders"
+    "http://localhost:8080/teamleader/teamleaders",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }
   );
   return response.data;
 }
@@ -104,8 +119,14 @@ function Projects() {
       mutationFn: (newProject: ProjectFormValues) => {
         const { teamLeaderId, ...project } = newProject;
         return axios.post(
-          `http://localhost:8080/api/projects/create/${teamLeaderId}`,
-          project
+          `http://localhost:8080/teamleader/projects/create/${teamLeaderId}`,
+          project,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          }
         );
       },
       onError: () => {
@@ -121,10 +142,15 @@ function Projects() {
   const { isPending: isPendingUpdate, mutateAsync: updateProject } =
     useMutation({
       mutationFn: (project: ProjectFormValues) => {
-        return axios.put(`http://localhost:8080/api/projects/${project.id}`, {
+        return axios.put(`http://localhost:8080/teamleader/projects/${project.id}`, {
           ...project,
-          teamLeaderId: Number(project.teamLeaderId),
-        });
+          teamLeaderId: Number(project.teamLeaderId),},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
       },
       onError: () => {
         console.log("Error updating a new project");
@@ -138,7 +164,14 @@ function Projects() {
 
   const { mutateAsync: deleteProjectMutation } = useMutation({
     mutationFn: (projectId: number) => {
-      return axios.delete(`http://localhost:8080/api/projects/${projectId}`);
+      return axios.delete(`http://localhost:8080/teamleader/projects/${projectId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["projects"] });
@@ -172,10 +205,12 @@ function Projects() {
     return (
       <div className="bg-background">
         <PageTitle>Projects Page</PageTitle>
-        <Button onClick={() => setSheetOpen(true)} className="mb-7">
-          <CirclePlus className="mr-2 h-4 w-4" />
-          Create new project
-        </Button>
+        { role === "TEAMLEADER" &&
+          <Button onClick={() => setSheetOpen(true)} className="mb-7">
+            <CirclePlus className="mr-2 h-4 w-4" />
+            Create new project
+          </Button>
+        }
         <Sheet
           open={sheetOpen}
           onOpenChange={(open) => {
@@ -281,7 +316,7 @@ function Projects() {
               <ContextMenu>
                 <ContextMenuTrigger>
                   <Card
-                    onClick={() => navigate(`/projects/${project.id}`)}
+                    onClick={() => navigate(`/teamleader/projects/${project.id}`)}
                     className="hover:bg-slate-100 hover:cursor-pointer"
                   >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "../ui/button";
-import { LayoutDashboard, FolderKanban } from "lucide-react";
+import { LayoutDashboard, FolderKanban, SquareCheckBig } from "lucide-react";
 
 const links = [
   {
@@ -12,7 +12,12 @@ const links = [
     title: "Projects",
     icon: <FolderKanban />,
     href: "projects",
-  }
+  },
+  {
+    title: "Tasks",
+    icon: <SquareCheckBig />,
+    href: "tasks",
+  },
 ];
 
 function isLinkActive(href: string, currentPath: string) {
@@ -34,7 +39,7 @@ function TeamLeaderSidebar() {
               alt="logo"
             />
           </div>
-          <div className="text-2xl font-bold text-primary">Taskifire</div>
+          <div className="text-2xl font-bold text-primary">Taskify</div>
         </Link>
         {/* Links  */}
         <div className="space-y-4 px-3 py-4">

@@ -4,9 +4,18 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 
+const token = localStorage.getItem('token');
+
 async function getTaskById(id: string | undefined) {
   if (!id) return;
-  const response = await axios.get<Task>(`http://localhost:8000/tasks/${id}`);
+  const response = await axios.get<Task>(`http://localhost:8080/teamleader/tasks/${id}`,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  }
+  );
   const task = response.data;
   return task;
 }
