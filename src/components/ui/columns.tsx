@@ -35,7 +35,7 @@ export const columns: ColumnDef<Task>[] = [
           >
             {row.original.label}
           </Badge>
-          <Link to={`/tasks/${row.original.id}`}>
+          <Link to={`/teamleader/tasks/${row.original.id}`}>
             <span className="max-w-[500px] truncate font-medium hover:underline">
               {row.getValue("title")}
             </span>

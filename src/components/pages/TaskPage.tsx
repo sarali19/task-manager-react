@@ -80,13 +80,25 @@ type TaskFormValues = z.infer<typeof taskFormSchema>;
 
 async function getProjects() {
   const response = await axios.get<Project[]>(
-    "http://localhost:8080/api/projects"
+    "http://localhost:8080/teamleader/projects",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }
   );
   return response.data;
 }
 async function getMembers() {
   const response = await axios.get<Member[]>(
-    "http://localhost:8080/api/members"
+    "http://localhost:8080/teamleader/members",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }
   );
   return response.data;
 }
@@ -119,11 +131,17 @@ function TaskPage() {
 
   const { isPending, mutateAsync: updateTask } = useMutation({
     mutationFn: (task: TaskFormValues) => {
-      return axios.put(`http://localhost:8080/api/tasks/${taskId}`, {
+      return axios.put(`http://localhost:8080/teamleader/tasks/${taskId}`, {
         ...task,
         id: taskIdNumber,
         memberId: Number(task.memberId),
         projectId: Number(task.projectId),
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
     },
     onError: () => {
@@ -140,10 +158,17 @@ function TaskPage() {
 
   const { mutateAsync: deleteTask } = useMutation({
     mutationFn: () => {
-      return axios.delete(`http://localhost:8080/api/tasks/${taskId}`);
+      return axios.delete(`http://localhost:8080/teamleader/tasks/${taskId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+      );
     },
     onSuccess: () => {
-      navigate("/tasks", { replace: true });
+      navigate("/teamleader/tasks", { replace: true });
     },
   });
 

@@ -12,6 +12,7 @@ import Users from './components/pages/Users';
 import Projects from './components/pages/Projects';
 import Tasks from './components/pages/Tasks';
 import ProjectPage from './components/pages/ProjectPage';
+import TaskPage from './components/pages/TaskPage';
 
 const App: React.FC = () => {
   return (
@@ -33,7 +34,7 @@ const App: React.FC = () => {
             </Route>
             <Route path="tasks">
               <Route index element={<Tasks />} /> {/* "index" for the default child route */}
-              <Route path=":taskId" element={<ProjectPage />} /> {/* Corrected nested route */}
+              <Route path=":taskId" element={<TaskPage />} /> {/* Corrected nested route */}
             </Route>
           </Route>
           <Route path='/member' element={<PrivateRoute element={<Layout/>} role='MEMBER' />} >
