@@ -47,6 +47,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { CalendarIcon } from "@radix-ui/react-icons";
 
+
+const token = localStorage.getItem('token');
+
+
 const taskFormSchema = z.object({
   title: z
     .string({
@@ -74,18 +78,37 @@ const taskFormSchema = z.object({
 type TaskFormValues = z.infer<typeof taskFormSchema>;
 
 async function getTasks() {
-  const response = await axios.get<Task[]>("http://localhost:8080/api/tasks");
+  const response = await axios.get<Task[]>("http://localhost:8080/teamleader/tasks",
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  }
+  );
   return response.data;
 }
 async function getMembers() {
   const response = await axios.get<Member[]>(
-    "http://localhost:8080/api/members"
+    "http://localhost:8080/teamleader/members",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }
   );
   return response.data;
 }
 async function getProjects() {
   const response = await axios.get<Project[]>(
-    "http://localhost:8080/api/projects"
+    "http://localhost:8080/teamleader/projects",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }
   );
   return response.data;
 }
@@ -114,8 +137,14 @@ function Tasks() {
     mutationFn: (newTask: TaskFormValues) => {
       const { projectId, memberId, ...task } = newTask;
       return axios.post(
-        `http://localhost:8080/api/tasks/project/${projectId}/member/${memberId}`,
-        task
+        `http://localhost:8080/teamleader/tasks/project/${projectId}/member/${memberId}`,
+        task,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
       );
     },
     onError: () => {

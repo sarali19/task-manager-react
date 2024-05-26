@@ -36,6 +36,21 @@ import { CalendarIcon } from "@radix-ui/react-icons";
 import { Input } from "@/components/ui/input";
 import { useEffect } from "react";
 
+const token = localStorage.getItem('token');
+
+async function getTaskById(id: string | undefined) {
+  if (!id) return;
+  const response = await axios.get<Task>(`http://localhost:8080/teamleader/tasks/${id}`,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  }
+  );
+  const task = response.data;
+  return task;
+}
 const taskFormSchema = z.object({
   id: z.number().optional(),
   title: z
@@ -65,27 +80,39 @@ type TaskFormValues = z.infer<typeof taskFormSchema>;
 
 async function getProjects() {
   const response = await axios.get<Project[]>(
-    "http://localhost:8080/api/projects"
+    "http://localhost:8080/teamleader/projects",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }
   );
   return response.data;
 }
 async function getMembers() {
   const response = await axios.get<Member[]>(
-    "http://localhost:8080/api/members"
+    "http://localhost:8080/teamleader/members",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }
   );
   return response.data;
 }
-async function getTaskById(id: number | undefined) {
-  if (!id) return;
-  const response = await axios.get<Task>(
-    `http://localhost:8080/api/tasks/${id}`
-  );
-  return response.data;
-}
+// async function getTaskById(id: number | undefined) {
+//   if (!id) return;
+//   const response = await axios.get<Task>(
+//     `http://localhost:8080/api/tasks/${id}`
+//   );
+//   return response.data;
+// }
 
 function TaskPage() {
   const { taskId } = useParams();
-  const taskIdNumber = taskId ? Number(taskId) : undefined;
+  const taskIdNumber = taskId ? String(taskId) : undefined;
   const navigate = useNavigate();
 
   const { data, isLoading, error } = useQuery({
@@ -104,11 +131,17 @@ function TaskPage() {
 
   const { isPending, mutateAsync: updateTask } = useMutation({
     mutationFn: (task: TaskFormValues) => {
-      return axios.put(`http://localhost:8080/api/tasks/${taskId}`, {
+      return axios.put(`http://localhost:8080/teamleader/tasks/${taskId}`, {
         ...task,
         id: taskIdNumber,
         memberId: Number(task.memberId),
         projectId: Number(task.projectId),
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
     },
     onError: () => {
@@ -125,10 +158,17 @@ function TaskPage() {
 
   const { mutateAsync: deleteTask } = useMutation({
     mutationFn: () => {
-      return axios.delete(`http://localhost:8080/api/tasks/${taskId}`);
+      return axios.delete(`http://localhost:8080/teamleader/tasks/${taskId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+      );
     },
     onSuccess: () => {
-      navigate("/tasks", { replace: true });
+      navigate("/teamleader/tasks", { replace: true });
     },
   });
 
