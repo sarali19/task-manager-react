@@ -20,6 +20,7 @@ const App: React.FC = () => {
       <Router>
         <Routes>
           <Route path='/login' element={<Login/>} />
+          <Route path='/swagger-ui/index.html' element=''/>
           <Route path='/administrator' element={<PrivateRoute element={<AdminLayout/>} role='ADMINISTRATOR' />} >
             <Route path='dashboard' element={<Dashboard/>} />
             <Route path='users' element={<Users/>} />
